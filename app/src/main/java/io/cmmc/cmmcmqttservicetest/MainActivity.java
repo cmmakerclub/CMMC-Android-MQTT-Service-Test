@@ -19,7 +19,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
-import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -36,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     final String serverUri = "tcp://mqtt.espert.io:1883";
 
     final String clientId = "ExampleAndroidClient";
-    final String subscriptionTopic = "ESPert/629304/Status";
+    final String subscriptionTopic = "ESPert/+/Status";
     final String publishTopic = "exampleAndroidPublishTopic";
     final String publishMessage = "Hello World!";
     TextView textView;
@@ -49,10 +48,10 @@ public class MainActivity extends AppCompatActivity {
             public void connectComplete(boolean reconnect, String serverURI) {
                 if (reconnect) {
                     addToHistory("[CON] Reconnected to : " + serverURI);
-                    subscribeToTopic();
                 } else {
                     addToHistory("[CON] Connected to: " + serverURI);
                 }
+                subscribeToTopic();
             }
 
             @Override
@@ -78,26 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         try {
-            IMqttActionListener clientCallback = new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    DisconnectedBufferOptions disconnectedBufferOptions = new DisconnectedBufferOptions();
-                    disconnectedBufferOptions.setBufferEnabled(true);
-                    disconnectedBufferOptions.setBufferSize(100);
-                    disconnectedBufferOptions.setPersistBuffer(false);
-                    disconnectedBufferOptions.setDeleteOldestMessages(false);
-                    mqttAndroidClient.setBufferOpts(disconnectedBufferOptions);
-                    subscribeToTopic();
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    addToHistory("Failed to connect to: " + serverUri);
-                }
-            };
-
-            addToHistory("Connecting to " + serverUri);
-//            mqttAndroidClient.connect(mqttConnectOptions, null, clientCallback);
             mqttAndroidClient.connect(mqttConnectOptions, null);
         } catch (MqttException ex) {
             ex.printStackTrace();
@@ -133,16 +112,6 @@ public class MainActivity extends AppCompatActivity {
                     addToHistory("Failed to subscribe");
                 }
             });
-
-            // THIS DOES NOT WORK!
-//            mqttAndroidClient.subscribe(subscriptionTopic, 0, new IMqttMessageListener() {
-//                @Override
-//                public void messageArrived(String topic, MqttMessage message) throws Exception {
-//                    // message Arrived!
-//                    System.out.println(">> Message: " + topic + " : " + new String(message.getPayload()));
-//                }
-//            });
-
         } catch (MqttException ex) {
             System.err.println("Exception whilst subscribing");
             ex.printStackTrace();
